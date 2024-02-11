@@ -40,6 +40,7 @@ server.get("/tasks/:id", async (req: Request, res: Response) => {
       res.status(404).json({ message: "Task not found" });
     }
   } catch (err) {
+    console.error("Error fetching data:", err);
     res.status(404).json({ message: "Error fetching data" });
   }
 });
@@ -47,16 +48,18 @@ server.get("/tasks/:id", async (req: Request, res: Response) => {
 // CREATE A TASK
 server.post("/tasks", async (req: Request, res: Response) => {
   const task = req.body;
-  if (!task) {
+  const { title, description, status } = req.body;
+  if (!title && !description && !status) {
     return res.status(400).json({
       message:
-        "You must include a title, description and status (Pendiente, En progreso o Completado) in your request",
+        "You must include a title, description, or status (Pendiente, En progreso o Completado) in your request",
     });
   }
   try {
     await db("taskslist").insert(task);
     res.status(201).json({ message: "Task successfully added" });
   } catch (err) {
+    console.error("Error adding task:", err);
     res.status(404).json({ message: "The task could not be created" });
   }
 });
@@ -75,7 +78,24 @@ server.put("/tasks/:id", async (req: Request, res: Response) => {
     await db("taskslist").where({ id }).update({ title, description, status });
     res.status(200).json({ message: "Task successfully updated" });
   } catch (err) {
+    console.error("Error updating task:", err);
     res.status(404).json({ message: "The task could not be updated" });
+  }
+});
+
+// DELETE ALL TASKS
+server.delete("/tasks", async (_req: Request, res: Response) => {
+  try {
+    const deletedCount = await db("taskslist").del();
+
+    if (deletedCount > 0) {
+      res.status(200).json({ message: "All tasks successfully deleted" });
+    } else {
+      res.status(404).json({ message: "No tasks found to delete" });
+    }
+  } catch (err) {
+    console.error("Error deleting tasks:", err);
+    res.status(500).json({ message: "Tasks could not be deleted" });
   }
 });
 
@@ -83,10 +103,15 @@ server.put("/tasks/:id", async (req: Request, res: Response) => {
 server.delete("/tasks/:id", async (req: Request, res: Response) => {
   const { id } = req.params;
   try {
-    await db("taskslist").where({ id }).del();
-    res.status(200).json({ message: "Task successfully deleted" });
+    const deletedCount = await db("taskslist").where({ id }).del();
+    if (deletedCount > 0) {
+      res.status(200).json({ message: "Task successfully deleted" });
+    } else {
+      res.status(404).json({ message: "Task not found" });
+    }
   } catch (err) {
-    res.status(404).json({ message: "The task could not be deleted" });
+    console.error("Error deleting task:", err);
+    res.status(500).json({ message: "The task could not be deleted" });
   }
 });
 
