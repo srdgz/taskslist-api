@@ -6,11 +6,11 @@ const config: { [key: string]: Knex.Config } = {
   development: {
     client: "postgresql",
     connection: {
-      user: "postgres",
-      password: "C4r4m3l0",
-      database: "postgres",
-      host: "localhost",
-      port: 5432,
+      user: process.env.RDS_USERNAME || "postgres",
+      password: process.env.RDS_PASSWORD || "C4r4m3l0",
+      database: process.env.RDS_DB_NAME || "postgres",
+      host: process.env.RDS_HOSTNAME || "localhost",
+      port: process.env.RDS_PORT ? Number(process.env.RDS_PORT) : 5432,
     },
     migrations: {
       directory: "./migrations",
